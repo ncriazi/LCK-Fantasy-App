@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  email        String        @unique
+  passwordHash String
+  teams        FantasyTeam[]
+  leagues      League[]      @relation("LeagueCommissioner")
+}
+
+model League {
+  id             String        @id @default(cuid())
+  name           String
+  inviteCode     String        @unique
+  commissionerId String
+  commissioner   User          @relation("LeagueCommissioner", fields: [commissionerId], references: [id])
+  teams          FantasyTeam[]
+  isDrafted      Boolean       @default(false)
+}
+
+model LckPlayer {
+  id             String        @id @default(cuid())
+  name           String        
+  role           String        
+  teamName       String        
+  fantasyTeams   FantasyTeam[] @relation("TeamRoster")
+}
+
+model FantasyTeam {
+  id        String      @id @default(cuid())
+  name      String
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  leagueId  String
+  league    League      @relation(fields: [leagueId], references: [id])
+  players   LckPlayer[] @relation("TeamRoster")
+
+  @@unique([userId, leagueId])
+}
