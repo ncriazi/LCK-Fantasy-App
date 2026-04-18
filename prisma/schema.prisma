@@ -25,28 +25,54 @@ model League {
   id             String        @id @default(cuid())
   name           String
   inviteCode     String        @unique
+  leagueSize     Int           @default(8)
+  draftType      String        @default("snake")
+  draftFormat    String        @default("normal")
   commissionerId String
   commissioner   User          @relation("LeagueCommissioner", fields: [commissionerId], references: [id])
   teams          FantasyTeam[]
   isDrafted      Boolean       @default(false)
 }
 
+model LckOrganization {
+  id              String        @id @default(cuid())
+  name            String        @unique
+  players         LckPlayer[]
+  defenseTeams    FantasyTeam[] @relation("DefenseOrganization")
+}
+
 model LckPlayer {
-  id             String        @id @default(cuid())
-  name           String        
-  role           String        
-  teamName       String        
-  fantasyTeams   FantasyTeam[] @relation("TeamRoster")
+  id             String            @id @default(cuid())
+  name           String
+  role           String
+  organizationId String
+  organization   LckOrganization   @relation(fields: [organizationId], references: [id])
+  topTeams       FantasyTeam[]     @relation("TopPlayer")
+  jungleTeams    FantasyTeam[]     @relation("JunglePlayer")
+  midTeams       FantasyTeam[]     @relation("MidPlayer")
+  botTeams       FantasyTeam[]     @relation("BotPlayer")
+  supportTeams   FantasyTeam[]     @relation("SupportPlayer")
 }
 
 model FantasyTeam {
-  id        String      @id @default(cuid())
-  name      String
-  userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  leagueId  String
-  league    League      @relation(fields: [leagueId], references: [id])
-  players   LckPlayer[] @relation("TeamRoster")
+  id            String           @id @default(cuid())
+  name          String
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  leagueId      String
+  league        League           @relation(fields: [leagueId], references: [id])
+  topPlayerId   String?
+  topPlayer     LckPlayer?       @relation("TopPlayer", fields: [topPlayerId], references: [id])
+  junglePlayerId String?
+  junglePlayer  LckPlayer?       @relation("JunglePlayer", fields: [junglePlayerId], references: [id])
+  midPlayerId   String?
+  midPlayer     LckPlayer?       @relation("MidPlayer", fields: [midPlayerId], references: [id])
+  botPlayerId   String?
+  botPlayer     LckPlayer?       @relation("BotPlayer", fields: [botPlayerId], references: [id])
+  supportPlayerId String?
+  supportPlayer LckPlayer?       @relation("SupportPlayer", fields: [supportPlayerId], references: [id])
+  defenseOrgId  String?
+  defenseOrg    LckOrganization? @relation("DefenseOrganization", fields: [defenseOrgId], references: [id])
 
   @@unique([userId, leagueId])
 }
