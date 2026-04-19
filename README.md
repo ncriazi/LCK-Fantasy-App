@@ -1,17 +1,5 @@
 # LCK Fantasy Backend
 
-<<<<<<< HEAD
-Backend setup for an LCK fantasy app using PostgreSQL and Prisma.
-
-## Current Status
-
-This project currently has:
-
-- Prisma configured with PostgreSQL
-- Database models for `User`, `League`, `LckPlayer`, and `FantasyTeam`
-- A working seed script in [`prisma/seed.js`](./prisma/seed.js)
-- Initial seeded player data for testing
-=======
 Backend API for an LCK fantasy app using Express, Prisma, and PostgreSQL.
 
 ## Current Status
@@ -24,18 +12,14 @@ This project currently supports:
 - invite-code league lookup and join flow
 - automatic fantasy team creation on league create/join
 - viewing a logged-in user's leagues
-- viewing a team's roster slot layout
+- viewing team rosters within the same league
+- assigning roster slots with league-wide uniqueness rules
+- clearing roster slots
 - seeded LCK organizations and players for local testing
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ## Tech Stack
 
 - Node.js
-<<<<<<< HEAD
-- Prisma
-- PostgreSQL
-- Express
-=======
 - Express
 - Prisma
 - PostgreSQL
@@ -60,21 +44,11 @@ Notes:
   - `leagueSize = 8`
   - `draftType = "snake"`
   - `draftFormat = "normal"`
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ## Project Structure
 
 ```text
 lck-fantasy-backend/
-<<<<<<< HEAD
-├── prisma/
-│   ├── schema.prisma
-│   ├── seed.js
-│   └── migrations/
-├── src/
-├── package.json
-└── prisma.config.ts
-=======
 |-- prisma/
 |   |-- migrations/
 |   |-- schema.prisma
@@ -86,16 +60,11 @@ lck-fantasy-backend/
 |-- package.json
 |-- prisma.config.ts
 `-- README.md
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 ```
 
 ## Environment Variables
 
-<<<<<<< HEAD
-Create a `.env` file with the following values:
-=======
 Create a `.env` file with:
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ```env
 DATABASE_URL="postgresql://USERNAME:PASSWORD@localhost:5432/YOUR_DATABASE?schema=public"
@@ -103,35 +72,21 @@ JWT_SECRET="your_secret_here"
 PORT=3001
 ```
 
-<<<<<<< HEAD
-## Install Dependencies
-=======
 ## Install
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ```powershell
 npm install
 ```
 
-<<<<<<< HEAD
-## Prisma Commands
-
-Generate the Prisma client:
-=======
 ## Database Commands
 
 Generate Prisma client:
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ```powershell
 npx.cmd prisma generate
 ```
 
-<<<<<<< HEAD
-Run the database migration:
-=======
 Apply migrations:
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ```powershell
 npx.cmd prisma migrate dev
@@ -149,11 +104,6 @@ Open Prisma Studio:
 npx.cmd prisma studio
 ```
 
-<<<<<<< HEAD
-## Available Scripts
-
-```powershell
-=======
 ## Run the Server
 
 ```powershell
@@ -171,32 +121,11 @@ http://localhost:3001
 ```powershell
 npm.cmd run dev
 npm.cmd run start
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 npm.cmd run db:generate
 npm.cmd run db:migrate
 npm.cmd run db:seed
 ```
 
-<<<<<<< HEAD
-## Testing So Far
-
-The database setup has been manually verified by:
-
-- running migrations successfully
-- running the seed script successfully
-- querying PostgreSQL directly and confirming seeded rows exist
-
-Example query:
-
-```sql
-SELECT * FROM "LckPlayer";
-```
-
-Expected seeded rows:
-
-- Faker
-- Chovy
-=======
 ## Current Models
 
 - `User`
@@ -231,6 +160,7 @@ Leagues:
 Teams:
 
 - `GET /teams/:teamId/roster`
+- `PATCH /teams/:teamId/roster`
 
 ## Example Flow
 
@@ -239,6 +169,58 @@ Teams:
 3. Create a league with `POST /leagues` or join one with `POST /leagues/join`.
 4. Call `GET /leagues/mine` to get the user's leagues and team ids.
 5. Call `GET /teams/:teamId/roster` to view the slot-based roster shape.
+6. Call `PATCH /teams/:teamId/roster` to assign or clear slots.
+
+## Roster Updates
+
+Supported player slots:
+
+- `top`
+- `jungle`
+- `mid`
+- `bot`
+- `support`
+
+Defense slot:
+
+- `defense`
+
+Assignment examples:
+
+Assign a player:
+
+```json
+{
+  "slot": "mid",
+  "playerId": "player_cuid_here"
+}
+```
+
+Assign a defense organization:
+
+```json
+{
+  "slot": "defense",
+  "organizationId": "org_cuid_here"
+}
+```
+
+Clear a slot:
+
+```json
+{
+  "slot": "mid",
+  "clear": true
+}
+```
+
+Rules currently enforced:
+
+- users can only edit their own team
+- users in the same league can still view other team rosters
+- player role must match the slot
+- a player can only appear on one fantasy team per league
+- a defense organization can only appear on one fantasy team per league
 
 ## Current Seed Data
 
@@ -254,22 +236,10 @@ Seeded roles per organization:
 - `mid`
 - `bot`
 - `support`
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
 
 ## Notes
 
 - PostgreSQL normally runs on port `5432`
-<<<<<<< HEAD
-- Prisma Studio runs on its own local browser port, which is separate from the database port
-- If `npm` is blocked in PowerShell, use `npm.cmd`
-
-## Next Step
-
-A good next step is building the first API route that fetches players from Prisma, such as:
-
-- `GET /players`
-
-=======
 - Prisma Studio uses its own local browser port
 - if `npm` is blocked in PowerShell, use `npm.cmd`
 - defense scoring and waiver-wire behavior are planned for later
@@ -278,8 +248,6 @@ A good next step is building the first API route that fetches players from Prism
 
 Good next backend steps:
 
-- manual slot assignment or draft-style player selection
-- team/roster update rules
 - league detail view once roster data becomes meaningful
+- draft-style turn and pick flow
 - scoring logic
->>>>>>> 93c70fc (Add auth, leagues, and roster foundation)
