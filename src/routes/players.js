@@ -6,7 +6,18 @@ const router = Router();
 router.get("/", async (_req, res) => {
   try {
     const players = await prisma.lckPlayer.findMany({
-      orderBy: [{ teamName: "asc" }, { name: "asc" }],
+      orderBy: [{ organization: { name: "asc" } }, { role: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     res.json(players);

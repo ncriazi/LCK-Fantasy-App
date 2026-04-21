@@ -26,6 +26,7 @@ model League {
   name                String
   inviteCode          String           @unique
   leagueSize          Int              @default(8)
+  currentWeek         Int              @default(1)
   draftType           String           @default("snake")
   draftFormat         String           @default("normal")
   commissionerId      String
@@ -39,6 +40,12 @@ model League {
   currentTeamOnClock  FantasyTeam?     @relation("LeagueCurrentTeamOnClock", fields: [currentTeamOnClockId], references: [id])
   draftOrderEntries   DraftOrderEntry[]
   draftPicks          DraftPick[]
+  waiverPriorities    WaiverPriority[]
+  waiverClaims        WaiverClaim[]
+  weeklyPlayerStates  WeeklyPlayerState[]
+  weeklyDefenseStates WeeklyDefenseState[]
+  weeklyTeamScores    WeeklyTeamScore[]
+  tradeProposals      TradeProposal[]
 }
 
 model DraftOrderEntry {
@@ -77,6 +84,10 @@ model LckOrganization {
   players         LckPlayer[]
   defenseTeams    FantasyTeam[] @relation("DefenseOrganization")
   draftPicks      DraftPick[]
+  waiverClaims    WaiverClaim[]
+  weeklyStates    WeeklyDefenseState[]
+  proposedTrades  TradeProposal[] @relation("TradeProposerOrganization")
+  receivedTrades  TradeProposal[] @relation("TradeRecipientOrganization")
 }
 
 model LckPlayer {
@@ -91,6 +102,10 @@ model LckPlayer {
   botTeams       FantasyTeam[]     @relation("BotPlayer")
   supportTeams   FantasyTeam[]     @relation("SupportPlayer")
   draftPicks     DraftPick[]
+  waiverClaims   WaiverClaim[]
+  weeklyStates   WeeklyPlayerState[]
+  proposedTrades TradeProposal[]   @relation("TradeProposerPlayer")
+  receivedTrades TradeProposal[]   @relation("TradeRecipientPlayer")
 }
 
 model FantasyTeam {
@@ -115,6 +130,117 @@ model FantasyTeam {
   draftOrderEntries  DraftOrderEntry[]
   clockLeagues       League[]          @relation("LeagueCurrentTeamOnClock")
   draftPicks         DraftPick[]
+  waiverPriority     WaiverPriority?
+  waiverClaims       WaiverClaim[]
+  weeklyScores       WeeklyTeamScore[]
+  proposedTrades     TradeProposal[]   @relation("TradeProposerTeam")
+  receivedTrades     TradeProposal[]   @relation("TradeRecipientTeam")
 
   @@unique([userId, leagueId])
+}
+
+model WaiverPriority {
+  id       String      @id @default(cuid())
+  leagueId String
+  league   League      @relation(fields: [leagueId], references: [id])
+  teamId   String      @unique
+  team     FantasyTeam @relation(fields: [teamId], references: [id])
+  position Int
+
+  @@unique([leagueId, teamId])
+  @@unique([leagueId, position])
+}
+
+model WaiverClaim {
+  id             String           @id @default(cuid())
+  leagueId       String
+  league         League           @relation(fields: [leagueId], references: [id])
+  teamId         String
+  team           FantasyTeam      @relation(fields: [teamId], references: [id])
+  week           Int
+  slot           String
+  playerId       String?
+  player         LckPlayer?       @relation(fields: [playerId], references: [id])
+  organizationId String?
+  organization   LckOrganization? @relation(fields: [organizationId], references: [id])
+  status         String           @default("pending")
+  resolutionNote String?
+  processedAt    DateTime?
+  createdAt      DateTime         @default(now())
+}
+
+model WeeklyPlayerState {
+  id        String    @id @default(cuid())
+  leagueId  String
+  league    League    @relation(fields: [leagueId], references: [id])
+  week      Int
+  playerId  String
+  player    LckPlayer @relation(fields: [playerId], references: [id])
+  kills     Int       @default(0)
+  assists   Int       @default(0)
+  cs        Int       @default(0)
+  visionScore Int     @default(0)
+  played    Boolean   @default(false)
+  points    Float     @default(0)
+
+  @@unique([leagueId, week, playerId])
+}
+
+model WeeklyDefenseState {
+  id             String          @id @default(cuid())
+  leagueId       String
+  league         League          @relation(fields: [leagueId], references: [id])
+  week           Int
+  organizationId String
+  organization   LckOrganization @relation(fields: [organizationId], references: [id])
+  towersAlive    Int             @default(0)
+  played         Boolean         @default(false)
+  points         Float           @default(0)
+
+  @@unique([leagueId, week, organizationId])
+}
+
+model WeeklyTeamScore {
+  id            String      @id @default(cuid())
+  leagueId      String
+  league        League      @relation(fields: [leagueId], references: [id])
+  week          Int
+  teamId        String
+  team          FantasyTeam @relation(fields: [teamId], references: [id])
+  topPoints     Float       @default(0)
+  junglePoints  Float       @default(0)
+  midPoints     Float       @default(0)
+  botPoints     Float       @default(0)
+  supportPoints Float       @default(0)
+  defensePoints Float       @default(0)
+  totalPoints   Float       @default(0)
+  finalizedAt   DateTime?
+
+  @@unique([leagueId, week, teamId])
+}
+
+model TradeProposal {
+  id                      String           @id @default(cuid())
+  leagueId                String
+  league                  League           @relation(fields: [leagueId], references: [id])
+  proposerTeamId          String
+  proposerTeam            FantasyTeam      @relation("TradeProposerTeam", fields: [proposerTeamId], references: [id])
+  recipientTeamId         String
+  recipientTeam           FantasyTeam      @relation("TradeRecipientTeam", fields: [recipientTeamId], references: [id])
+  proposerSlot            String
+  proposerPlayerId        String?
+  proposerPlayer          LckPlayer?       @relation("TradeProposerPlayer", fields: [proposerPlayerId], references: [id])
+  proposerOrganizationId  String?
+  proposerOrganization    LckOrganization? @relation("TradeProposerOrganization", fields: [proposerOrganizationId], references: [id])
+  recipientSlot           String
+  recipientPlayerId       String?
+  recipientPlayer         LckPlayer?       @relation("TradeRecipientPlayer", fields: [recipientPlayerId], references: [id])
+  recipientOrganizationId String?
+  recipientOrganization   LckOrganization? @relation("TradeRecipientOrganization", fields: [recipientOrganizationId], references: [id])
+  status                  String           @default("pending_recipient")
+  createdAt               DateTime         @default(now())
+  recipientRespondedAt    DateTime?
+  commissionerReviewedAt  DateTime?
+  completedAt             DateTime?
+  commissionerNote        String?
 }
